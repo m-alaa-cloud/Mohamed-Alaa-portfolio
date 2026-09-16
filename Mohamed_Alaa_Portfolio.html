@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mohamed Alaa — Infrastructure &amp; Cloud Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg: #08070c;
+  --bg-soft: #0d0c15;
+  --surface: #12111c;
+  --surface-2: #17162482;
+  --line: rgba(255,255,255,0.08);
+  --indigo: #4b3df5;
+  --indigo-soft: #7a6ffc;
+  --pink: #ff3d81;
+  --cyan: #35e6d6;
+  --amber: #ffb648;
+  --text: #f1f0f6;
+  --text-dim: #a7a4b8;
+  --text-faint: #6b687e;
+  --radius-s: 6px;
+  --radius-m: 14px;
+  --radius-l: 26px;
+  --ease: cubic-bezier(.16,.84,.28,1);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans', sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+  min-height:100vh;
+}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;font-weight:700;letter-spacing:-0.01em;}
+a{color:inherit;text-decoration:none;}
+ul{list-style:none;}
+img{max-width:100%;display:block;}
+button{font-family:inherit;cursor:none;}
+::selection{background:var(--pink);color:#0a0a12;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+}
+
+/* custom scrollbar */
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,var(--pink),var(--indigo));
+  border-radius:10px;
+  border:2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,var(--cyan),var(--pink));}
+
+/* ============ NOISE OVERLAY ============ */
+.noise{
+  position:fixed;inset:0;
+  pointer-events:none;
+  z-index:2;
+  opacity:0.045;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============ PARTICLE CANVAS ============ */
+#particle-canvas{
+  position:fixed;inset:0;
+  z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(75,61,245,0.16), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 85%, rgba(255,61,129,0.12), transparent 60%),
+    var(--bg);
+}
+
+/* ============ CURSOR ============ */
+.cursor-dot,.cursor-ring{
+  position:fixed;top:0;left:0;
+  pointer-events:none;
+  z-index:9999;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  will-change:transform;
+}
+.cursor-dot{
+  width:7px;height:7px;
+  background:var(--cyan);
+  box-shadow:0 0 10px 2px var(--cyan);
+}
+.cursor-ring{
+  width:34px;height:34px;
+  border:1.5px solid rgba(255,255,255,0.5);
+  transition:width .2s var(--ease), height .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+}
+.cursor-ring.active{
+  width:54px;height:54px;
+  border-color:var(--pink);
+  background:rgba(255,61,129,0.08);
+}
+@media (hover:none), (pointer:coarse){
+  .cursor-dot,.cursor-ring{display:none;}
+  body{cursor:auto;}
+  a,button{cursor:pointer;}
+}
+
+/* ============ LOADER ============ */
+#loader{
+  position:fixed;inset:0;
+  z-index:10000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:22px;
+  transition:opacity .7s var(--ease), visibility .7s var(--ease);
+}
+#loader.hidden{opacity:0;visibility:hidden;}
+.loader-initials{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(3rem,10vw,5.5rem);
+  font-weight:800;
+  letter-spacing:0.02em;
+  background:linear-gradient(100deg,var(--cyan),var(--indigo-soft) 40%,var(--pink) 70%,var(--amber));
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 2.4s linear infinite;
+}
+.loader-bar-track{
+  width:220px;height:3px;
+  background:rgba(255,255,255,0.08);
+  border-radius:4px;
+  overflow:hidden;
+}
+.loader-bar-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--cyan),var(--pink),var(--amber));
+  border-radius:4px;
+  animation:loadfill 1.9s var(--ease) forwards;
+}
+@keyframes loadfill{
+  0%{width:0%;}
+  100%{width:100%;}
+}
+.loader-label{
+  font-size:0.72rem;
+  letter-spacing:0.16em;
+  color:var(--text-faint);
+  font-family:'DM Sans',sans-serif;
+}
+
+@keyframes shimmer{
+  0%{background-position:0% 50%;}
+  100%{background-position:300% 50%;}
+}
+
+/* ============ LAYOUT / SECTION HELPERS ============ */
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 32px;
+}
+section{
+  position:relative;
+  z-index:1;
+  padding:140px 0;
+}
+.eyebrow{
+  font-size:0.85rem;
+  color:var(--cyan);
+  font-family:'DM Sans',sans-serif;
+  font-weight:600;
+  margin-bottom:14px;
+}
+.section-title{
+  font-size:clamp(2rem,4vw,2.8rem);
+  margin-bottom:56px;
+  max-width:600px;
+}
+.reveal{
+  opacity:0;
+  transform:translateY(36px);
+  transition:opacity .9s var(--ease), transform .9s var(--ease);
+}
+.reveal.left{transform:translateX(-46px);}
+.reveal.right{transform:translateX(46px);}
+.reveal.in{opacity:1;transform:translate(0,0);}
+
+/* ============ NAVBAR ============ */
+header#navbar{
+  position:fixed;top:0;left:0;right:0;
+  z-index:500;
+  transform:translateY(-110%);
+  transition:transform .8s var(--ease) .3s, background .3s ease, border-color .3s ease;
+  border-bottom:1px solid transparent;
+}
+header#navbar.dropped{transform:translateY(0);}
+header#navbar.scrolled{
+  background:rgba(8,7,12,0.6);
+  backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:1180px;margin:0 auto;
+  padding:20px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:1.05rem;
+  letter-spacing:0.01em;
+}
+.nav-logo span{color:var(--pink);}
+.nav-links{
+  display:flex;gap:38px;
+}
+.nav-links a{
+  position:relative;
+  font-size:0.88rem;
+  color:var(--text-dim);
+  padding:4px 0;
+  transition:color .25s ease;
+}
+.nav-links a::after{
+  content:'';
+  position:absolute;left:0;bottom:0;
+  width:0%;height:1px;
+  background:linear-gradient(90deg,var(--cyan),var(--pink));
+  transition:width .3s var(--ease);
+}
+.nav-links a:hover{color:var(--text);}
+.nav-links a:hover::after{width:100%;}
+.nav-toggle{display:none;}
+
+@media (max-width:760px){
+  .nav-links{
+    position:fixed;top:64px;right:0;
+    flex-direction:column;
+    background:rgba(10,9,16,0.97);
+    backdrop-filter:blur(20px);
+    width:min(72vw,300px);
+    height:calc(100vh - 64px);
+    padding:40px 32px;
+    gap:28px;
+    transform:translateX(100%);
+    transition:transform .45s var(--ease);
+    border-left:1px solid var(--line);
+  }
+  .nav-links.open{transform:translateX(0);}
+  .nav-toggle{
+    display:flex;flex-direction:column;gap:5px;
+    background:none;border:none;padding:6px;
+  }
+  .nav-toggle span{width:22px;height:2px;background:var(--text);border-radius:2px;}
+}
+
+/* ============ HERO ============ */
+#hero{
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding-top:120px;
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:1.05fr 0.85fr;
+  gap:60px;
+  align-items:center;
+}
+.avail-tag{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:7px 16px 7px 12px;
+  border:1px solid var(--line);
+  border-radius:100px;
+  font-size:0.78rem;
+  color:var(--text-dim);
+  margin-bottom:30px;
+  background:rgba(255,255,255,0.02);
+}
+.avail-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 0 0 rgba(53,230,214,0.6);
+  animation:pulse-dot 2s infinite;
+}
+@keyframes pulse-dot{
+  0%{box-shadow:0 0 0 0 rgba(53,230,214,0.55);}
+  70%{box-shadow:0 0 0 8px rgba(53,230,214,0);}
+  100%{box-shadow:0 0 0 0 rgba(53,230,214,0);}
+}
+.hero-name{
+  font-size:clamp(2.6rem,6.4vw,4.6rem);
+  line-height:1.02;
+  background:linear-gradient(100deg,var(--text) 10%,var(--cyan) 35%,var(--pink) 55%,var(--indigo-soft) 75%,var(--text) 95%);
+  background-size:250% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 7s linear infinite;
+  margin-bottom:18px;
+}
+.hero-role{
+  font-size:clamp(1.05rem,2vw,1.3rem);
+  color:var(--text-dim);
+  font-weight:400;
+  margin-bottom:22px;
+}
+.hero-role b{color:var(--text);font-weight:600;}
+.hero-desc{
+  color:var(--text-dim);
+  max-width:480px;
+  font-size:0.98rem;
+  line-height:1.7;
+  margin-bottom:38px;
+}
+.cta-row{display:flex;gap:16px;flex-wrap:wrap;}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 26px;
+  border-radius:100px;
+  font-size:0.9rem;
+  font-weight:600;
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease), background .35s var(--ease);
+}
+.btn-primary{
+  background:linear-gradient(100deg,var(--pink),var(--indigo));
+  color:#fff;
+  box-shadow:0 8px 30px -10px rgba(255,61,129,0.55);
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 14px 34px -8px rgba(255,61,129,0.7);}
+.btn-outline{
+  border:1px solid var(--line);
+  color:var(--text);
+  background:rgba(255,255,255,0.02);
+}
+.btn-outline:hover{border-color:var(--cyan);transform:translateY(-3px);background:rgba(53,230,214,0.06);}
+
+/* hero card */
+.hero-card-wrap{
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  min-height:420px;
+}
+.orb{
+  position:absolute;
+  width:340px;height:340px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(75,61,245,0.5),transparent 65%);
+  filter:blur(30px);
+  animation:orb-float 8s ease-in-out infinite;
+}
+@keyframes orb-float{
+  0%,100%{transform:translate(0,0) scale(1);}
+  50%{transform:translate(14px,-18px) scale(1.08);}
+}
+.ring-dashed{
+  position:absolute;
+  width:300px;height:300px;
+  border:1.5px dashed rgba(53,230,214,0.35);
+  border-radius:50%;
+  animation:spin 22s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.float-card{
+  position:relative;
+  width:280px;
+  padding:34px 26px;
+  border-radius:var(--radius-l);
+  background:linear-gradient(160deg,rgba(23,22,36,0.9),rgba(18,17,28,0.85));
+  border:1px solid var(--line);
+  backdrop-filter:blur(10px);
+  box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+  animation:card-float 5s ease-in-out infinite;
+  text-align:center;
+}
+@keyframes card-float{
+  0%,100%{transform:translateY(0) rotate(-1deg);}
+  50%{transform:translateY(-14px) rotate(1deg);}
+}
+.card-avatar{
+  width:76px;height:76px;
+  margin:0 auto 16px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:1.5rem;
+  background:linear-gradient(135deg,var(--cyan),var(--indigo));
+  color:#08070c;
+}
+.card-name{font-size:1.1rem;margin-bottom:2px;}
+.card-role{font-size:0.8rem;color:var(--text-faint);margin-bottom:22px;}
+.card-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  border-top:1px solid var(--line);
+  padding-top:18px;
+}
+.card-stat b{
+  display:block;font-family:'Syne',sans-serif;font-size:1.25rem;
+  background:linear-gradient(120deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.card-stat span{font-size:0.66rem;color:var(--text-faint);letter-spacing:0.03em;}
+
+/* ============ MARQUEE ============ */
+.marquee-section{padding:60px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;}
+.marquee-label{text-align:center;font-size:0.75rem;color:var(--text-faint);margin-bottom:26px;letter-spacing:0.04em;}
+.marquee-track{
+  display:flex;
+  width:max-content;
+  gap:64px;
+  animation:marquee 26s linear infinite;
+}
+@keyframes marquee{
+  from{transform:translateX(0);}
+  to{transform:translateX(-50%);}
+}
+.marquee-track span{
+  font-family:'Syne',sans-serif;
+  font-size:1.15rem;
+  color:var(--text-faint);
+  white-space:nowrap;
+  display:flex;align-items:center;gap:12px;
+}
+.marquee-track span i{width:5px;height:5px;border-radius:50%;background:var(--pink);display:inline-block;}
+
+/* ============ SKILLS ============ */
+.skills-layout{display:grid;grid-template-columns:1fr 1fr;gap:70px;}
+.skill-row{margin-bottom:26px;}
+.skill-head{display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:9px;}
+.skill-head span:first-child{color:var(--text);font-weight:600;}
+.skill-head span:last-child{color:var(--text-faint);}
+.skill-track{
+  height:8px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.06);
+  overflow:hidden;
+  position:relative;
+}
+.skill-fill{
+  height:100%;width:0%;
+  border-radius:6px;
+  background:linear-gradient(90deg,var(--cyan),var(--indigo-soft));
+  position:relative;
+  transition:width 1.4s var(--ease);
+}
+.skill-fill::after{
+  content:'';
+  position:absolute;top:0;right:0;bottom:0;width:40px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);
+  transform:translateX(100%);
+  opacity:0;
+}
+.skill-fill.filled::after{
+  animation:sweep 1s ease-out 1.3s forwards;
+}
+@keyframes sweep{
+  0%{transform:translateX(-100%);opacity:0.9;}
+  100%{transform:translateX(300%);opacity:0;}
+}
+.chip-cloud-title{font-size:0.92rem;color:var(--text-dim);margin:8px 0 20px;}
+.chip-cloud{display:flex;flex-wrap:wrap;gap:11px;}
+.chip{
+  padding:9px 16px;
+  border-radius:100px;
+  border:1px solid var(--line);
+  font-size:0.8rem;
+  color:var(--text-dim);
+  background:rgba(255,255,255,0.02);
+  transition:transform .3s var(--ease), color .3s ease, border-color .3s ease, background .3s ease;
+}
+.chip:hover{
+  transform:translateY(-5px);
+  color:var(--text);
+  border-color:var(--amber);
+  background:rgba(255,182,72,0.08);
+}
+.chip:nth-child(3n+1):hover{border-color:var(--cyan);background:rgba(53,230,214,0.08);}
+.chip:nth-child(3n+2):hover{border-color:var(--pink);background:rgba(255,61,129,0.08);}
+
+/* ============ EXPERIENCE ============ */
+.timeline{
+  position:relative;
+  padding-left:36px;
+}
+.timeline::before{
+  content:'';
+  position:absolute;left:0;top:6px;bottom:6px;width:2px;
+  background:linear-gradient(180deg,var(--cyan),var(--pink) 50%,var(--amber));
+  border-radius:2px;
+}
+.tl-item{
+  position:relative;
+  margin-bottom:44px;
+  padding:28px 30px;
+  border-radius:var(--radius-m);
+  background:var(--surface);
+  border:1px solid var(--line);
+  transition:transform .4s var(--ease), box-shadow .4s var(--ease), border-color .4s ease;
+}
+.tl-item:hover{
+  transform:translateX(10px);
+  border-color:rgba(255,61,129,0.4);
+  box-shadow:0 20px 50px -24px rgba(255,61,129,0.35);
+}
+.tl-item::before{
+  content:'';
+  position:absolute;left:-42px;top:32px;
+  width:11px;height:11px;border-radius:50%;
+  background:var(--bg);
+  border:2px solid var(--cyan);
+}
+.tl-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
+.tl-role{font-size:1.15rem;}
+.tl-date{font-size:0.78rem;color:var(--text-faint);white-space:nowrap;padding-top:4px;}
+.tl-company{font-size:0.86rem;color:var(--cyan);margin-bottom:14px;}
+.tl-desc{list-style:none;margin-bottom:16px;}
+.tl-desc li{
+  font-size:0.88rem;color:var(--text-dim);line-height:1.65;
+  padding-left:16px;position:relative;margin-bottom:6px;
+}
+.tl-desc li::before{
+  content:'';position:absolute;left:0;top:9px;
+  width:5px;height:5px;border-radius:50%;background:var(--pink);
+}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;}
+.badge{
+  font-size:0.72rem;
+  padding:5px 12px;
+  border-radius:100px;
+  background:rgba(75,61,245,0.14);
+  color:var(--indigo-soft);
+  border:1px solid rgba(75,61,245,0.35);
+}
+
+/* ============ PROJECTS ============ */
+.proj-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:26px;
+}
+.proj-card{
+  position:relative;
+  padding:30px 26px;
+  border-radius:var(--radius-m);
+  background:var(--surface);
+  border:1px solid var(--line);
+  overflow:hidden;
+  transition:transform .4s var(--ease), box-shadow .4s var(--ease);
+}
+.proj-card::before{
+  content:'';
+  position:absolute;top:0;left:-100%;right:0;height:3px;
+  background:linear-gradient(90deg,var(--cyan),var(--pink),var(--amber));
+  transition:left .5s var(--ease);
+}
+.proj-card:hover{transform:translateY(-10px);box-shadow:0 26px 50px -20px rgba(0,0,0,0.55);}
+.proj-card:hover::before{left:0;}
+.proj-emoji{font-size:1.9rem;margin-bottom:18px;display:inline-block;}
+.proj-name{font-size:1.08rem;margin-bottom:10px;}
+.proj-desc{font-size:0.85rem;color:var(--text-dim);line-height:1.65;margin-bottom:20px;min-height:80px;}
+.proj-tags{display:flex;flex-wrap:wrap;gap:7px;}
+.proj-tags span{
+  font-size:0.68rem;
+  padding:4px 10px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.05);
+  color:var(--text-faint);
+  border:1px solid var(--line);
+}
+
+/* ============ EDUCATION & LANGUAGES ============ */
+.edu-layout{display:grid;grid-template-columns:1.2fr 0.8fr;gap:50px;}
+.edu-card{
+  padding:32px;
+  border-radius:var(--radius-m);
+  background:var(--surface);
+  border:1px solid var(--line);
+  margin-bottom:20px;
+}
+.edu-degree{font-size:1.15rem;margin-bottom:6px;}
+.edu-school{font-size:0.88rem;color:var(--cyan);margin-bottom:14px;}
+.edu-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:0.8rem;color:var(--text-faint);margin-bottom:12px;}
+.edu-note{font-size:0.85rem;color:var(--text-dim);line-height:1.6;}
+.cert-title{font-size:0.85rem;color:var(--text-dim);margin:26px 0 14px;}
+.cert-list{display:flex;flex-wrap:wrap;gap:9px;}
+.cert-list span{
+  font-size:0.74rem;padding:7px 13px;border-radius:100px;
+  border:1px solid var(--line);color:var(--text-dim);
+  background:rgba(255,255,255,0.02);
+}
+.lang-title{font-size:0.98rem;margin-bottom:20px;color:var(--text);}
+.lang-badge{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;
+  border-radius:var(--radius-m);
+  background:var(--surface);
+  border:1px solid var(--line);
+  margin-bottom:14px;
+}
+.lang-badge b{font-size:0.95rem;font-weight:600;}
+.lang-level{
+  font-size:0.7rem;
+  padding:5px 12px;
+  border-radius:100px;
+  color:#08070c;
+  font-weight:700;
+}
+.lang-level.native{background:var(--cyan);}
+.lang-level.fluent{background:var(--amber);}
+
+/* ============ CONTACT ============ */
+.contact-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.contact-card{
+  display:flex;align-items:center;gap:18px;
+  padding:20px 22px;
+  border-radius:var(--radius-m);
+  background:var(--surface);
+  border:1px solid var(--line);
+  margin-bottom:16px;
+  transition:transform .35s var(--ease), border-color .35s ease;
+}
+.contact-card:hover{transform:translateX(12px);border-color:var(--pink);}
+.contact-icon{
+  width:44px;height:44px;flex:none;
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(53,230,214,0.1);
+  color:var(--cyan);
+  font-size:1.2rem;
+  font-weight:700;
+}
+.contact-card .contact-icon{font-size:0.95rem;}
+.contact-label{font-size:0.72rem;color:var(--text-faint);margin-bottom:3px;}
+.contact-value{font-size:0.94rem;color:var(--text);word-break:break-word;}
+
+.ripple-wrap{
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  min-height:340px;
+}
+.ripple-avatar{
+  position:relative;
+  width:130px;height:130px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--indigo));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:2.2rem;
+  color:#fff;
+  z-index:2;
+  animation:pulse-avatar 2.6s ease-in-out infinite;
+}
+@keyframes pulse-avatar{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,61,129,0.4);}
+  50%{box-shadow:0 0 0 14px rgba(255,61,129,0);}
+}
+.ripple{
+  position:absolute;
+  width:130px;height:130px;
+  border-radius:50%;
+  border:1.5px solid rgba(53,230,214,0.5);
+  animation:ripple-grow 3s ease-out infinite;
+}
+.ripple:nth-child(2){animation-delay:1s;border-color:rgba(255,61,129,0.5);}
+.ripple:nth-child(3){animation-delay:2s;border-color:rgba(255,182,72,0.5);}
+@keyframes ripple-grow{
+  0%{transform:scale(1);opacity:0.8;}
+  100%{transform:scale(2.4);opacity:0;}
+}
+
+/* ============ FOOTER ============ */
+footer{
+  padding:44px 0;
+  border-top:1px solid var(--line);
+  text-align:center;
+  font-size:0.78rem;
+  color:var(--text-faint);
+}
+footer b{color:var(--text-dim);}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr;}
+  .hero-card-wrap{margin-top:50px;}
+  .skills-layout{grid-template-columns:1fr;gap:10px;}
+  .proj-grid{grid-template-columns:1fr 1fr;}
+  .edu-layout{grid-template-columns:1fr;}
+  .contact-layout{grid-template-columns:1fr;}
+}
+@media (max-width:600px){
+  section{padding:90px 0;}
+  .wrap{padding:0 22px;}
+  .proj-grid{grid-template-columns:1fr;}
+  .tl-item{padding:22px 18px;}
+  .timeline{padding-left:26px;}
+  .tl-item::before{left:-32px;}
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<canvas id="particle-canvas"></canvas>
+
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div id="loader">
+  <div class="loader-initials">MA</div>
+  <div class="loader-bar-track"><div class="loader-bar-fill"></div></div>
+  <div class="loader-label">LOADING PORTFOLIO</div>
+</div>
+
+<header id="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">Mohamed <span>Alaa</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#hero">Home</a>
+      <a href="#skills">Skills</a>
+      <a href="#experience">Experience</a>
+      <a href="#projects">Projects</a>
+      <a href="#education">Education</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="avail-tag"><span class="avail-dot"></span> Open to new opportunities</div>
+        <h1 class="hero-name">Mohamed Alaa</h1>
+        <p class="hero-role">Infrastructure Engineer at <b>Huawei Technologies</b>, Cairo</p>
+        <p class="hero-desc">Cloud operations engineer with 4+ years of infrastructure and data center experience, including hands-on work running Huawei Cloud Stack at scale — provisioning virtual machines, keeping SLAs high, and turning infrastructure as code into fewer 2am pages. Currently exploring AWS, Azure and AI-assisted development.</p>
+        <div class="cta-row">
+          <a href="#projects" class="btn btn-primary">View my work</a>
+          <a href="#contact" class="btn btn-outline">Get in touch</a>
+        </div>
+      </div>
+
+      <div class="hero-card-wrap">
+        <div class="orb"></div>
+        <div class="ring-dashed"></div>
+        <div class="float-card">
+          <div class="card-avatar">MA</div>
+          <div class="card-name">Mohamed Alaa</div>
+          <div class="card-role">Infrastructure Engineer</div>
+          <div class="card-stats">
+            <div class="card-stat"><b>4+</b><span>TOTAL EXP</span></div>
+            <div class="card-stat"><b>450+</b><span>VMs MANAGED</span></div>
+            <div class="card-stat"><b>100+</b><span>INCIDENTS SOLVED</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-section">
+    <div class="marquee-label">Companies &amp; platforms I've worked with</div>
+    <div class="marquee-track" id="marqueeTrack">
+      <span><i></i>Huawei Technologies</span>
+      <span><i></i>Telecom Egypt</span>
+      <span><i></i>Microsoft Azure</span>
+      <span><i></i>Amazon Web Services</span>
+      <span><i></i>Huawei Cloud Stack</span>
+      <span><i></i>Red Hat</span>
+      <span><i></i>Cisco</span>
+      <span><i></i>Huawei Technologies</span>
+      <span><i></i>Telecom Egypt</span>
+      <span><i></i>Microsoft Azure</span>
+      <span><i></i>Amazon Web Services</span>
+      <span><i></i>Huawei Cloud Stack</span>
+      <span><i></i>Red Hat</span>
+      <span><i></i>Cisco</span>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="wrap">
+      <div class="eyebrow reveal">CAPABILITIES</div>
+      <h2 class="section-title reveal">Skills &amp; tools</h2>
+
+      <div class="skills-layout">
+        <div class="reveal left">
+          <div class="skill-row" data-level="90">
+            <div class="skill-head"><span>Huawei Cloud Stack &amp; Virtualization</span><span>90%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="85">
+            <div class="skill-head"><span>Linux Administration</span><span>85%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="80">
+            <div class="skill-head"><span>Terraform / Infrastructure as Code</span><span>80%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="75">
+            <div class="skill-head"><span>Amazon Web Services (AWS)</span><span>75%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="75">
+            <div class="skill-head"><span>Microsoft Azure</span><span>75%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="70">
+            <div class="skill-head"><span>Docker &amp; Kubernetes</span><span>70%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="65">
+            <div class="skill-head"><span>Incident Management &amp; Monitoring</span><span>65%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+          <div class="skill-row" data-level="55">
+            <div class="skill-head"><span>Bash &amp; Python Scripting</span><span>55%</span></div>
+            <div class="skill-track"><div class="skill-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="reveal right">
+          <p class="chip-cloud-title">Technologies I reach for</p>
+          <div class="chip-cloud">
+            <span class="chip">Huawei Cloud</span>
+            <span class="chip">AWS</span>
+            <span class="chip">Microsoft Azure</span>
+            <span class="chip">Docker</span>
+            <span class="chip">Kubernetes</span>
+            <span class="chip">Terraform</span>
+            <span class="chip">Git</span>
+            <span class="chip">CI/CD</span>
+            <span class="chip">Linux</span>
+            <span class="chip">Windows Server</span>
+            <span class="chip">VPC</span>
+            <span class="chip">ELB</span>
+            <span class="chip">NAT</span>
+            <span class="chip">VPN</span>
+            <span class="chip">Direct Connect</span>
+            <span class="chip">DNS</span>
+            <span class="chip">Firewalls</span>
+            <span class="chip">Cloud AOM</span>
+            <span class="chip">Cloud Eye (CES)</span>
+            <span class="chip">IAM</span>
+            <span class="chip">REST APIs</span>
+            <span class="chip">Bash</span>
+            <span class="chip">Python</span>
+            <span class="chip">Lambda</span>
+            <span class="chip">API Gateway</span>
+            <span class="chip">DynamoDB</span>
+            <span class="chip">S3</span>
+            <span class="chip">SNS</span>
+            <span class="chip">Claude Code</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="wrap">
+      <div class="eyebrow reveal">CAREER PATH</div>
+      <h2 class="section-title reveal">Experience</h2>
+
+      <div class="timeline">
+        <div class="tl-item reveal">
+          <div class="tl-head">
+            <span class="tl-role">Infrastructure Engineer</span>
+            <span class="tl-date">Jul 2025 — Present</span>
+          </div>
+          <div class="tl-company">Huawei Technologies · Cairo, Egypt</div>
+          <ul class="tl-desc">
+            <li>Managed and maintained virtualization infrastructure — servers, hypervisors, and VM resources — supporting Huawei Cloud Stack environments.</li>
+            <li>Provisioned, configured, and decommissioned virtual machines across server clusters, balancing compute, storage, and network resources.</li>
+            <li>Performed server health checks, patching, and lifecycle management to reduce downtime risk.</li>
+            <li>Coordinated with cloud operations teams to bridge on-premises infrastructure with cloud-based workloads.</li>
+          </ul>
+          <div class="badge-row">
+            <span class="badge">450+ VMs managed</span>
+            <span class="badge">Capacity planning</span>
+            <span class="badge">Lifecycle management</span>
+          </div>
+        </div>
+
+        <div class="tl-item reveal">
+          <div class="tl-head">
+            <span class="tl-role">L1 Cloud O&amp;M Engineer</span>
+            <span class="tl-date">Jan 2025 — Jul 2025</span>
+          </div>
+          <div class="tl-company">Huawei Technologies · Cairo, Egypt</div>
+          <ul class="tl-desc">
+            <li>Operated and maintained critical Huawei Cloud Stack (HCS) infrastructure to ensure high availability and service continuity.</li>
+            <li>Monitored system alarms, investigated incidents, performed root cause analysis, and applied remediation actions.</li>
+            <li>Collaborated with internal teams and customers to support stable cloud service delivery.</li>
+            <li>Created SOPs, MOPs, and troubleshooting documentation to improve operational consistency.</li>
+          </ul>
+          <div class="badge-row">
+            <span class="badge">100+ incidents handled</span>
+            <span class="badge">Strong SLA performance</span>
+            <span class="badge">Launched major HCS environment</span>
+          </div>
+        </div>
+
+        <div class="tl-item reveal">
+          <div class="tl-head">
+            <span class="tl-role">Data Center Engineer</span>
+            <span class="tl-date">Sep 2022 — Jan 2025</span>
+          </div>
+          <div class="tl-company">Telecom Egypt · Cairo, Egypt</div>
+          <ul class="tl-desc">
+            <li>Supported the build and commissioning of enterprise data center infrastructure — servers, switches, racks, structured cabling.</li>
+            <li>Participated in hardware installation, infrastructure preparation, and scalability planning for large-scale environments.</li>
+            <li>Assisted in infrastructure upgrades, audits, and preventive maintenance to improve reliability and compliance.</li>
+          </ul>
+          <div class="badge-row">
+            <span class="badge">National-level projects</span>
+            <span class="badge">Proactive maintenance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="wrap">
+      <div class="eyebrow reveal">SELECTED WORK</div>
+      <h2 class="section-title reveal">Projects</h2>
+
+      <div class="proj-grid">
+        <div class="proj-card reveal">
+          <span class="proj-emoji">🔐</span>
+          <h3 class="proj-name">Azure VM Secure Access with Microsoft Entra ID</h3>
+          <p class="proj-desc">Deployed an Azure VM with identity-based access via Microsoft Entra ID, using RBAC roles and NSG rules to replace local authentication with centralized identity controls.</p>
+          <div class="proj-tags"><span>Azure</span><span>Entra ID</span><span>RBAC</span><span>NSG</span></div>
+        </div>
+
+        <div class="proj-card reveal">
+          <span class="proj-emoji">⚡</span>
+          <h3 class="proj-name">AWS Serverless Task Management App</h3>
+          <p class="proj-desc">Designed and deployed a serverless web app using Lambda, API Gateway, DynamoDB, and S3, with CRUD APIs, SNS notifications, and secure IAM policies for scalable, event-driven architecture.</p>
+          <div class="proj-tags"><span>Lambda</span><span>API Gateway</span><span>DynamoDB</span><span>S3</span><span>SNS</span></div>
+        </div>
+
+        <div class="proj-card reveal">
+          <span class="proj-emoji">🏗️</span>
+          <h3 class="proj-name">AWS Infrastructure Provisioning with Terraform</h3>
+          <p class="proj-desc">Provisioned VPC, subnet, security group, and EC2 resources with Terraform, applying IaC principles and organizing configuration for reusable, maintainable provisioning workflows.</p>
+          <div class="proj-tags"><span>Terraform</span><span>VPC</span><span>EC2</span><span>IaC</span></div>
+        </div>
+
+        <div class="proj-card reveal">
+          <span class="proj-emoji">🐳</span>
+          <h3 class="proj-name">Containerized App Deployment with Docker &amp; Kubernetes</h3>
+          <p class="proj-desc">Containerized applications with Docker and deployed to Kubernetes, defining Deployments, Services, and ConfigMaps — using AI coding agents like Claude Code to scaffold manifests and debug clusters with no prior dev background.</p>
+          <div class="proj-tags"><span>Docker</span><span>Kubernetes</span><span>Claude Code</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDUCATION & LANGUAGES -->
+  <section id="education">
+    <div class="wrap edu-layout">
+      <div>
+        <div class="eyebrow reveal">BACKGROUND</div>
+        <h2 class="section-title reveal">Education &amp; certifications</h2>
+
+        <div class="edu-card reveal">
+          <div class="edu-degree">Bachelor of Telecommunications Engineering</div>
+          <div class="edu-school">Egyptian-Russian University</div>
+          <div class="edu-meta"><span>Jun 2022</span><span>Grade: Good</span><span>Excellence Graduation Project</span></div>
+          <div class="edu-note">Graduation project: MATLAB OFDM carrier aggregation using a single transmission chain for 5G communication.</div>
+        </div>
+
+        <p class="cert-title reveal">Certifications</p>
+        <div class="cert-list reveal">
+          <span>AZ-104 — Azure Administrator</span>
+          <span>AZ-900 — Azure Fundamentals</span>
+          <span>AWS Solutions Architect – Associate</span>
+          <span>Terraform Associate</span>
+          <span>HCIA – Cloud Computing</span>
+          <span>HCIA – Cloud Service</span>
+          <span>HCCDA – Tech Essential</span>
+          <span>Red Hat Linux System Administration I</span>
+          <span>CCNA</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="lang-title reveal">Languages</p>
+        <div class="lang-badge reveal"><b>Arabic</b><span class="lang-level native">Native</span></div>
+        <div class="lang-badge reveal"><b>English</b><span class="lang-level fluent">Professional</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap contact-layout">
+      <div>
+        <div class="eyebrow reveal">LET'S TALK</div>
+        <h2 class="section-title reveal">Get in touch</h2>
+
+        <div class="contact-card reveal">
+          <div class="contact-icon">✉</div>
+          <div><div class="contact-label">Email</div><div class="contact-value">malaa20499@gmail.com</div></div>
+        </div>
+        <div class="contact-card reveal">
+          <div class="contact-icon">☎</div>
+          <div><div class="contact-label">Phone</div><div class="contact-value">+20 010 6744 1120</div></div>
+        </div>
+        <div class="contact-card reveal">
+          <div class="contact-icon">📍</div>
+          <div><div class="contact-label">Location</div><div class="contact-value">New Cairo, Egypt</div></div>
+        </div>
+        <div class="contact-card reveal">
+          <div class="contact-icon">●</div>
+          <div><div class="contact-label">Availability</div><div class="contact-value">Open to new opportunities</div></div>
+        </div>
+        <a href="https://www.linkedin.com/in/mohamed-alaa-37672a18b/" target="_blank" rel="noopener" class="contact-card reveal" style="text-decoration:none;">
+          <div class="contact-icon">in</div>
+          <div><div class="contact-label">LinkedIn</div><div class="contact-value">linkedin.com/in/mohamed-alaa-37672a18b</div></div>
+        </a>
+        <a href="https://github.com/m-alaa-cloud" target="_blank" rel="noopener" class="contact-card reveal" style="text-decoration:none;">
+          <div class="contact-icon">&lt;/&gt;</div>
+          <div><div class="contact-label">GitHub</div><div class="contact-value">github.com/m-alaa-cloud</div></div>
+        </a>
+      </div>
+
+      <div class="ripple-wrap reveal">
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple-avatar">MA</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Designed &amp; built by <b>Mohamed Alaa</b> · Cairo, Egypt
+  <div style="margin-top:14px;display:flex;gap:20px;justify-content:center;">
+    <a href="https://www.linkedin.com/in/mohamed-alaa-37672a18b/" target="_blank" rel="noopener" style="color:var(--text-dim);">LinkedIn</a>
+    <a href="https://github.com/m-alaa-cloud" target="_blank" rel="noopener" style="color:var(--text-dim);">GitHub</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- LOADER ---------- */
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('navbar').classList.add('dropped');
+    }, 2000);
+  });
+
+  /* ---------- CUSTOM CURSOR ---------- */
+  var dot = document.getElementById('cursorDot');
+  var ring = document.getElementById('cursorRing');
+  var mx = 0, my = 0, rx = 0, ry = 0;
+  var hasFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  if(hasFinePointer){
+    window.addEventListener('mousemove', function(e){
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = 'translate(' + mx + 'px,' + my + 'px) translate(-50%,-50%)';
+    });
+    (function animRing(){
+      rx += (mx - rx) * 0.16;
+      ry += (my - ry) * 0.16;
+      ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px) translate(-50%,-50%)';
+      requestAnimationFrame(animRing);
+    })();
+    document.querySelectorAll('a, button, .chip, .proj-card, .tl-item, .contact-card').forEach(function(el){
+      el.addEventListener('mouseenter', function(){ ring.classList.add('active'); });
+      el.addEventListener('mouseleave', function(){ ring.classList.remove('active'); });
+    });
+  }
+
+  /* ---------- NAV SCROLL + MOBILE TOGGLE ---------- */
+  var navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', function(){
+    navbar.classList.toggle('scrolled', window.scrollY > 30);
+  });
+  var navToggle = document.getElementById('navToggle');
+  var navLinks = document.getElementById('navLinks');
+  if(navToggle){
+    navToggle.addEventListener('click', function(){
+      navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ navLinks.classList.remove('open'); });
+    });
+  }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  var revealObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(function(el){ revealObserver.observe(el); });
+
+  /* ---------- SKILL BARS ---------- */
+  var skillRows = document.querySelectorAll('.skill-row');
+  var skillObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        var row = entry.target;
+        var level = row.getAttribute('data-level');
+        var fill = row.querySelector('.skill-fill');
+        fill.style.width = level + '%';
+        setTimeout(function(){ fill.classList.add('filled'); }, 1400);
+        skillObserver.unobserve(row);
+      }
+    });
+  }, { threshold: 0.4 });
+  skillRows.forEach(function(row){ skillObserver.observe(row); });
+
+  /* ---------- PARTICLE NETWORK ---------- */
+  var canvas = document.getElementById('particle-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H, particles = [];
+  var colors = ['#35e6d6', '#ff3d81', '#4b3df5', '#ffb648'];
+  var PCOUNT;
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    PCOUNT = Math.min(85, Math.floor((W * H) / 16000));
+    particles = [];
+    for(var i = 0; i < PCOUNT; i++){
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: (Math.random() - 0.5) * 0.35,
+        r: Math.random() * 1.6 + 0.8,
+        c: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function tick(){
+    ctx.clearRect(0, 0, W, H);
+    for(var i = 0; i < particles.length; i++){
+      var p = particles[i];
+      if(!reduceMotion){
+        p.x += p.vx; p.y += p.vy;
+        if(p.x < 0 || p.x > W) p.vx *= -1;
+        if(p.y < 0 || p.y > H) p.vy *= -1;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    for(var a = 0; a < particles.length; a++){
+      for(var b = a + 1; b < particles.length; b++){
+        var dx = particles[a].x - particles[b].x;
+        var dy = particles[a].y - particles[b].y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if(dist < 130){
+          ctx.beginPath();
+          ctx.moveTo(particles[a].x, particles[a].y);
+          ctx.lineTo(particles[b].x, particles[b].y);
+          ctx.strokeStyle = 'rgba(160,160,200,' + (0.14 * (1 - dist / 130)) + ')';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+})();
+</script>
+</body>
+</html>
